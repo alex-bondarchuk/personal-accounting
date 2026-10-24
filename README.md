@@ -41,3 +41,8 @@ SUPABASE_ANON_KEY=<your-anon-key>
 ```
 
 Команда `npm start` автоматично генерує `supabase-config.js` з цих змінних перед запуском. `anon` key не є секретом, але RLS-політики мають залишатися увімкненими. `service_role` key у Railway або браузер додавати не можна.
+
+## Vercel
+
+Імпортуй репозиторій у Vercel. Вкажи Build Command `npm run build`, Output Directory `.`, Framework `Other`.
+Додай ті самі Variables `SUPABASE_URL` і `SUPABASE_ANON_KEY`. Build-скрипт згенерує `supabase-config.js` перед публікацією.
