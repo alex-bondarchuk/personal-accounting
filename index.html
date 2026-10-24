@@ -16,23 +16,37 @@
         <a class="brand" href="#top" aria-label="облік, на початок">облік<span class="brand-dot">.</span></a>
         <div class="top-actions">
           <span class="status-dot" id="syncStatus"><span></span> локально</span>
-          <button class="auth-button" id="authToggle">Увійти</button>
+          <button class="auth-button" id="authToggle" hidden>Мій акаунт</button>
           <button class="icon-button" id="themeToggle" aria-label="Перемкнути тему" title="Перемкнути тему">☼</button>
         </div>
         <div class="auth-panel paper-card" id="authPanel" hidden>
           <div class="section-kicker">ОБЛІКОВИЙ ЗАПИС</div>
-          <h3 id="authTitle">Увійти</h3>
-          <p class="auth-copy" id="authHint">Підключи Supabase, щоб зберігати витрати між пристроями.</p>
+          <h3 id="accountEmail">Мій акаунт</h3>
+          <p class="auth-copy">Твої записи та бюджети синхронізовані з Supabase.</p>
+          <button class="auth-logout" id="authLogout" type="button">Вийти з акаунта</button>
+        </div>
+      </header>
+
+      <section class="auth-gate" id="authGate">
+        <div class="auth-gate-copy">
+          <div class="eyebrow">ОСОБИСТИЙ ФІНАНСОВИЙ БЛОКНОТ</div>
+          <h1>Гроші,<br /><span>без шуму.</span></h1>
+          <p class="hero-copy">Увійди або створи акаунт, щоб бачити свої витрати, бюджети та аналітику з будь-якого пристрою.</p>
+        </div>
+        <div class="auth-card paper-card">
+          <div class="section-kicker">ОБЛІКОВИЙ ЗАПИС</div>
+          <h2 id="authTitle">Увійти</h2>
+          <p class="auth-copy" id="authHint">Твої дані будуть доступні лише після авторизації.</p>
           <form id="authForm">
             <label class="auth-label">Email<input id="authEmail" type="email" autocomplete="email" required placeholder="you@example.com" /></label>
             <label class="auth-label">Пароль<input id="authPassword" type="password" autocomplete="current-password" required minlength="6" placeholder="мінімум 6 символів" /></label>
             <button class="primary-button auth-submit" type="submit" id="authSubmit">Увійти</button>
           </form>
+          <button class="google-button" id="googleAuth" type="button"><span class="google-mark">G</span> Увійти через Google</button>
           <button class="auth-switch" id="authModeToggle" type="button">Ще немає акаунта? Зареєструватися</button>
-          <button class="auth-logout" id="authLogout" type="button" hidden>Вийти з акаунта</button>
           <div class="auth-message" id="authMessage" role="status"></div>
         </div>
-      </header>
+      </section>
 
       <main id="top">
         <section class="hero-grid">

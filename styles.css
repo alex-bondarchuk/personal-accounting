@@ -43,6 +43,18 @@ button { cursor: pointer; }
 .auth-switch, .auth-logout { border: 0; background: transparent; color: var(--bark); font-size: 11px; padding: 12px 0 0; text-decoration: underline; }
 .auth-logout { color: var(--terracotta); }
 .auth-message { color: var(--bark); font-size: 11px; line-height: 1.35; padding-top: 10px; }
+.auth-gate { min-height: calc(100vh - 72px); display: grid; grid-template-columns: .9fr 1.1fr; gap: 72px; align-items: center; max-width: 940px; margin: 0 auto; padding: 70px 0 90px; }
+.auth-gate[hidden] { display: none; }
+.auth-gate-copy { max-width: 410px; }
+.auth-card { width: min(390px, 100%); padding: 28px; justify-self: end; }
+.auth-card h2 { margin: 10px 0 7px; }
+.google-button { width: 100%; display: flex; justify-content: center; align-items: center; gap: 9px; border: 1px solid var(--linen); border-radius: var(--radius); background: var(--paper); padding: 10px 15px; margin-top: 10px; font-weight: 584; }
+.google-button:hover { border-color: var(--gold); background: var(--honey); }
+.google-mark { color: #4285f4; font-weight: 700; font-size: 17px; }
+.auth-card .auth-switch { display: block; margin: 0 auto; }
+#top { display: none; }
+body.authenticated #top { display: block; }
+body:not(.authenticated) .footer { display: none; }
 .hero-grid { display: grid; grid-template-columns: .88fr 1.12fr; gap: 56px; align-items: center; padding: 64px 0 76px; }
 .eyebrow, .section-kicker { font-size: 11px; font-weight: 584; letter-spacing: .11em; color: var(--driftwood); }
 .demo-badge { display: inline-block; margin-left: 8px; padding: 4px 8px; border-radius: 4px; color: var(--espresso); background: var(--honey); letter-spacing: .03em; }
@@ -196,6 +208,8 @@ body.dark .demo-badge, body.dark .toggle-button.active { color: #261b07; }
   .app-shell { padding: 0 16px 32px; }
   .hero-grid, .two-column { grid-template-columns: 1fr; gap: 28px; }
   .hero-grid { padding: 45px 0 52px; }
+  .auth-gate { grid-template-columns: 1fr; gap: 30px; padding: 45px 0 60px; }
+  .auth-card { justify-self: start; }
   .hero-copy { max-width: 460px; }
   .metric-grid, .budget-grid { grid-template-columns: repeat(2, 1fr); }
   .insights-grid { grid-template-columns: repeat(2, 1fr); }

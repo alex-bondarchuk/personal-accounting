@@ -232,13 +232,18 @@ async function cloudSettingsUpsert(value) {
 function showAuthMessage(message) { const element = $('#authMessage'); if (element) element.textContent = message; }
 function renderAuth() {
   const configured = Boolean(supabaseClient);
+  document.body.classList.toggle('authenticated', Boolean(authUser));
+  $('#authGate').hidden = Boolean(authUser);
+  $('#authToggle').hidden = !authUser;
   $('#syncStatus').innerHTML = `<span></span> ${authUser ? 'синхронізовано' : 'локально'}`;
-  $('#authToggle').textContent = authUser ? 'Мій акаунт' : 'Увійти';
+  $('#authToggle').textContent = 'Мій акаунт';
   $('#authTitle').textContent = authUser ? (authUser.email || 'Мій акаунт') : (authMode === 'login' ? 'Увійти' : 'Реєстрація');
-  $('#authHint').textContent = authUser ? 'Витрати синхронізуються з Supabase PostgreSQL.' : configured ? 'Увійди, щоб зберігати записи між пристроями.' : 'Додай Supabase URL та anon key у supabase-config.js.';
-  $('#authForm').hidden = Boolean(authUser) || !configured;
+  $('#accountEmail').textContent = authUser?.email || 'Мій акаунт';
+  $('#authHint').textContent = configured ? 'Твої дані будуть доступні лише після авторизації.' : 'Додай Supabase URL та anon key у supabase-config.js.';
+  $('#authForm').hidden = !configured;
+  $('#googleAuth').hidden = !configured;
   $('#authModeToggle').hidden = Boolean(authUser) || !configured;
-  $('#authLogout').hidden = !authUser;
+  $('#authMessage').textContent = configured ? '' : 'Авторизація ще не налаштована.';
   $('#authSubmit').textContent = authMode === 'login' ? 'Увійти' : 'Зареєструватися';
 }
 async function syncFromCloud() {
@@ -283,6 +288,15 @@ function setup() {
   $('#authToggle').addEventListener('click', () => { $('#authPanel').hidden = !$('#authPanel').hidden; renderAuth(); });
   $('#authModeToggle').addEventListener('click', () => { authMode = authMode === 'login' ? 'register' : 'login'; renderAuth(); });
   $('#authLogout').addEventListener('click', async () => { if (supabaseClient) await supabaseClient.auth.signOut(); $('#authPanel').hidden = true; });
+  $('#googleAuth').addEventListener('click', async () => {
+    if (!supabaseClient) { showAuthMessage('Спочатку налаштуй Supabase.'); return; }
+    showAuthMessage('Переходимо до Google…');
+    const { error } = await supabaseClient.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}${window.location.pathname}` }
+    });
+    if (error) showAuthMessage(`Не вдалося увійти через Google: ${error.message}`);
+  });
   $('#authForm').addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!supabaseClient) { showAuthMessage('Спочатку заповни supabase-config.js.'); return; }
@@ -302,7 +316,7 @@ function setup() {
   $('#addExpenseBtn').addEventListener('click', async () => { const parsed = parseEntries($('#expenseInput').value); if (!parsed.length) { showToast('Не знайшов суму — спробуй «кава 85»'); return; } setUserEntries([...getUserEntries(), ...parsed]); for (const entry of parsed) await cloudUpsert(entry); $('#expenseInput').value = ''; updateParsePreview(); const latest = fromKey(parsed[0].date); selectedMonth = new Date(latest.getFullYear(), latest.getMonth(), 1); render(); showToast(`Додано: ${parsed.length} ${parsed.length === 1 ? 'запис' : 'записи'}`); });
   $('#searchInput').addEventListener('input', () => renderJournal(entriesForMonth())); $('#categoryFilter').addEventListener('change', () => renderJournal(entriesForMonth()));
   $('#categoryFilter').insertAdjacentHTML('beforeend', categories.map((category, i) => `<option value="${i}">${category.name}</option>`).join(''));
-  render(); renderAuth(); initSupabase();
+  renderAuth(); initSupabase();
 }
 
 function updateParsePreview() { const preview = $('#parsePreview'); const parsed = parseEntries($('#expenseInput').value); preview.hidden = !parsed.length; preview.innerHTML = parsed.map((entry) => `<span class="parse-chip">${escapeHtml(entry.name)} · ${money(entry.amount)} ₴ · ${formatDate(entry.date)}</span>`).join(''); }
