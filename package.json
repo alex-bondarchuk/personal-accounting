@@ -4,6 +4,7 @@
   "private": true,
   "description": "Український застосунок для обліку витрат",
   "scripts": {
+    "build": "node scripts/generate-config.mjs",
     "start": "node scripts/generate-config.mjs && node server.mjs"
   }
 }
