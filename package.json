@@ -1,0 +1,9 @@
+{
+  "name": "oblik",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Український застосунок для обліку витрат",
+  "scripts": {
+    "start": "node scripts/generate-config.mjs && node server.mjs"
+  }
+}

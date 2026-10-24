@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f8f7f5" />
+    <title>облік — щоденник витрат</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#top" aria-label="облік, на початок">облік<span class="brand-dot">.</span></a>
+        <div class="top-actions">
+          <span class="status-dot" id="syncStatus"><span></span> локально</span>
+          <button class="auth-button" id="authToggle">Увійти</button>
+          <button class="icon-button" id="themeToggle" aria-label="Перемкнути тему" title="Перемкнути тему">☼</button>
+        </div>
+        <div class="auth-panel paper-card" id="authPanel" hidden>
+          <div class="section-kicker">ОБЛІКОВИЙ ЗАПИС</div>
+          <h3 id="authTitle">Увійти</h3>
+          <p class="auth-copy" id="authHint">Підключи Supabase, щоб зберігати витрати між пристроями.</p>
+          <form id="authForm">
+            <label class="auth-label">Email<input id="authEmail" type="email" autocomplete="email" required placeholder="you@example.com" /></label>
+            <label class="auth-label">Пароль<input id="authPassword" type="password" autocomplete="current-password" required minlength="6" placeholder="мінімум 6 символів" /></label>
+            <button class="primary-button auth-submit" type="submit" id="authSubmit">Увійти</button>
+          </form>
+          <button class="auth-switch" id="authModeToggle" type="button">Ще немає акаунта? Зареєструватися</button>
+          <button class="auth-logout" id="authLogout" type="button" hidden>Вийти з акаунта</button>
+          <div class="auth-message" id="authMessage" role="status"></div>
+        </div>
+      </header>
+
+      <main id="top">
+        <section class="hero-grid">
+          <div>
+            <div class="eyebrow">ЩОДЕННИК ВИТРАТ <span class="demo-badge" id="demoBadge">Демо</span><button class="remove-demo-btn" id="removeDemoBtn" type="button">Прибрати приклади</button></div>
+            <h1>Гроші,<br /><span>без шуму.</span></h1>
+            <p class="hero-copy">Напиши як у месенджері. Я розкладу кожен рядок по датах, категоріях і сенсу.</p>
+          </div>
+          <div class="capture-card paper-card">
+            <div class="capture-label"><span class="capture-icon">↳</span> швидкий запис</div>
+            <label class="sr-only" for="expenseInput">Запиши витрати одним рядком</label>
+            <textarea id="expenseInput" rows="2" placeholder="Кава 85, таксі додому 240, Сільпо 1 340 вчора"></textarea>
+            <div class="example-row" id="exampleRow">
+              <button class="example-btn" data-example="Кава 85, таксі додому 240">Кава 85, таксі 240</button>
+              <button class="example-btn" data-example="вчора: кава 85, аптека 420">вчора: кава 85, аптека 420</button>
+              <button class="example-btn" data-example="Сільпо 1 340 позавчора">Сільпо 1 340 позавчора</button>
+            </div>
+            <div class="parse-preview" id="parsePreview" hidden></div>
+            <div class="capture-footer">
+              <span>Підтримує дати, гривні та українські й російські назви</span>
+              <button class="primary-button" id="addExpenseBtn">Додати <span>↗</span></button>
+            </div>
+          </div>
+        </section>
+
+        <section class="month-summary section-block">
+          <div class="section-heading month-heading">
+            <div>
+              <div class="section-kicker">ОГЛЯД</div>
+              <div class="month-switcher">
+                <button class="plain-icon" id="prevMonth" aria-label="Попередній місяць">←</button>
+                <h2 id="monthLabel">—</h2>
+                <button class="plain-icon" id="nextMonth" aria-label="Наступний місяць">→</button>
+              </div>
+            </div>
+            <div class="summary-side"><span id="summaryPeriod">з 1 по сьогодні</span><span class="tiny-live"><i></i> наживо</span></div>
+          </div>
+          <div class="total-row">
+            <div>
+              <div class="big-total" id="totalSpent">0 <small>₴</small></div>
+              <p id="summarySentence" class="summary-sentence">Дані з’являться після першого запису.</p>
+            </div>
+            <div class="summary-note"><span class="note-mark">↗</span><span>суми збережено<br />у цьому браузері</span></div>
+          </div>
+        </section>
+
+        <section class="metric-grid section-block" id="metricGrid"></section>
+
+        <section class="section-block money-section">
+          <div class="section-heading">
+            <div><div class="section-kicker">СТРУКТУРА</div><h2>Куди йдуть гроші</h2></div>
+            <span class="section-meta" id="categoryMeta">—</span>
+          </div>
+          <div class="category-layout">
+            <div class="category-strip" id="categoryStrip"></div>
+            <div class="category-table" id="categoryTable"></div>
+          </div>
+        </section>
+
+        <section class="section-block insights-section">
+          <div class="section-heading"><div><div class="section-kicker">СИГНАЛИ</div><h2>Помічено</h2></div><span class="section-meta">на основі твоєї історії</span></div>
+          <div class="insights-grid" id="insightsGrid"></div>
+        </section>
+
+        <section class="two-column section-block">
+          <div class="paper-card chart-card">
+            <div class="card-head"><div><div class="section-kicker">ДЕНЬ ЗА ДНЕМ</div><h2>Динаміка місяця</h2></div><button class="toggle-button active" id="cumulativeToggle">накопичено</button></div>
+            <div class="chart-legend"><span><i class="legend-dot amber"></i> витрати</span><span><i class="legend-line"></i> середнє за день</span></div>
+            <div class="bar-chart" id="dailyChart"></div>
+          </div>
+          <div class="paper-card chart-card">
+            <div class="card-head"><div><div class="section-kicker">РИТМ</div><h2>Календар</h2></div><span class="section-meta">грн / день</span></div>
+            <div class="weekday-row"><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Нд</span></div>
+            <div class="heatmap" id="heatmap"></div>
+            <div class="heatmap-legend"><span>менше</span><i class="heat-cell h0"></i><i class="heat-cell h1"></i><i class="heat-cell h2"></i><i class="heat-cell h3"></i><i class="heat-cell h4"></i><span>більше</span></div>
+          </div>
+        </section>
+
+        <section class="section-block half-year-section">
+          <div class="section-heading"><div><div class="section-kicker">КОНТЕКСТ</div><h2>Пів року</h2></div><span class="section-meta">натисни на місяць</span></div>
+          <div class="six-month-chart" id="sixMonthChart"></div>
+          <div class="chart-category-legend" id="chartCategoryLegend"></div>
+        </section>
+
+        <section class="section-block budget-section">
+          <div class="section-heading"><div><div class="section-kicker">ПЛАН</div><h2>Бюджети</h2></div><span class="section-meta">місячні ліміти · натисни суму</span></div>
+          <div class="budget-grid" id="budgetGrid"></div>
+        </section>
+
+        <section class="section-block journal-section">
+          <div class="section-heading journal-heading"><div><div class="section-kicker">ІСТОРІЯ</div><h2>Журнал</h2></div><span class="section-meta" id="journalCount">0 операцій</span></div>
+          <div class="journal-toolbar"><div class="search-wrap"><span>⌕</span><input id="searchInput" placeholder="Пошук у записах" /></div><select id="categoryFilter"><option value="all">Усі категорії</option></select></div>
+          <div class="journal-list" id="journalList"></div>
+        </section>
+      </main>
+
+      <footer class="footer"><span>облік · твій паперовий фінансовий блокнот</span><span>дані залишаються у браузері</span></footer>
+    </div>
+    <div class="toast" id="toast" role="status"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
