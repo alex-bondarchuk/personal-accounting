@@ -237,6 +237,8 @@ function renderAuth() {
   const configured = Boolean(supabaseClient);
   const isRegister = authMode === 'register';
   document.body.classList.toggle('authenticated', Boolean(authUser));
+  document.body.classList.toggle('user-mode', Boolean(authUser));
+  document.body.classList.toggle('demo-mode', !authUser);
   document.body.classList.toggle('auth-open', Boolean(authOpen && !authUser));
   $('#authGate').classList.toggle('register-mode', isRegister);
   $('#authGate').hidden = Boolean(authUser) || !authOpen;
@@ -272,11 +274,14 @@ async function syncFromCloud() {
 }
 async function handleAuthState(user) {
   authUser = user;
+  if (authUser) authOpen = false;
+  renderAuth();
+  render();
   if (authUser) {
-    authOpen = false;
     await syncFromCloud();
+    renderAuth();
+    render();
   }
-  renderAuth(); render();
 }
 async function initSupabase() {
   const config = window.OBLIK_SUPABASE || {};

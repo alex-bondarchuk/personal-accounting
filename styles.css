@@ -68,9 +68,11 @@ body.auth-open .footer { display: none; }
 .demo-locked span { display: block; }
 .demo-locked .lock-mark { display: inline-grid; place-items: center; width: 25px; height: 25px; margin-bottom: 12px; border-radius: 50%; background: var(--honey); color: var(--gold); }
 .demo-locked strong { display: block; color: var(--espresso); font-size: 16px; margin-bottom: 5px; }
-body:not(.authenticated) .private-entry-form { display: none; }
-body:not(.authenticated) .demo-locked { display: block; }
-body:not(.authenticated) .remove-demo-btn { display: none; }
+body.demo-mode .private-entry-form { display: none; }
+body.demo-mode .demo-locked { display: block; }
+body.demo-mode .remove-demo-btn { display: none; }
+body.user-mode .private-entry-form { display: block; }
+body.user-mode .demo-locked { display: none; }
 .category-chip.readonly { cursor: default; }
 .hero-grid { display: grid; grid-template-columns: .88fr 1.12fr; gap: 56px; align-items: center; padding: 64px 0 76px; }
 .eyebrow, .section-kicker { font-size: 11px; font-weight: 584; letter-spacing: .11em; color: var(--driftwood); }
