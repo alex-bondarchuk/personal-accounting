@@ -39,6 +39,7 @@
           <h2 id="authTitle">Увійти до обліку</h2>
           <p class="auth-copy" id="authHint">Введи email і пароль, щоб відкрити свої записи та аналітику.</p>
           <form id="authForm">
+            <label class="auth-label" id="authNameField" hidden>Ім’я<input id="authName" type="text" autocomplete="name" placeholder="Як до тебе звертатися?" /></label>
             <label class="auth-label">Email<input id="authEmail" type="email" autocomplete="email" required placeholder="you@example.com" /></label>
             <label class="auth-label">Пароль<input id="authPassword" type="password" autocomplete="current-password" required minlength="6" placeholder="мінімум 6 символів" /></label>
             <button class="primary-button auth-submit" type="submit" id="authSubmit">Увійти</button>
