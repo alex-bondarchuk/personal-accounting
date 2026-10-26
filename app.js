@@ -251,13 +251,11 @@ function renderAuth() {
     : isRegister
       ? 'Створи акаунт — після підтвердження email зможеш увійти до свого обліку.'
       : 'Введи email і пароль, щоб відкрити свої записи та аналітику.';
-  $('#authForm').hidden = !configured;
+  $('#loginForm').hidden = !configured || isRegister;
+  $('#registerForm').hidden = !configured || !isRegister;
   $('#googleAuth').hidden = !configured;
-  $('#authNameField').hidden = !isRegister || !configured;
-  $('#authName').required = isRegister && configured;
   $('#authModeToggle').hidden = Boolean(authUser) || !configured;
   if (!configured) $('#authMessage').textContent = 'Авторизація ще не налаштована.';
-  $('#authSubmit').textContent = isRegister ? 'Зареєструватися' : 'Увійти';
   $('#authModeToggle').textContent = isRegister ? 'Вже маєш акаунт? Увійти' : 'Ще немає акаунта? Створити його';
 }
 async function syncFromCloud() {
@@ -307,24 +305,34 @@ function setup() {
     });
     if (error) showAuthMessage(`Не вдалося увійти через Google: ${error.message}`);
   });
-  $('#authForm').addEventListener('submit', async (event) => {
+  const submitLogin = async (event) => {
     event.preventDefault();
     if (!supabaseClient) { showAuthMessage('Спочатку заповни supabase-config.js.'); return; }
-    const email = $('#authEmail').value.trim(); const password = $('#authPassword').value; const name = $('#authName').value.trim();
-    $('#authSubmit').disabled = true; showAuthMessage('Зачекай…');
-    const result = authMode === 'login' ? await supabaseClient.auth.signInWithPassword({ email, password }) : await supabaseClient.auth.signUp({ email, password, options: { data: { full_name: name } } });
-    $('#authSubmit').disabled = false;
+    const email = $('#loginEmail').value.trim(); const password = $('#loginPassword').value;
+    $('#loginSubmit').disabled = true; showAuthMessage('Зачекай…');
+    const result = await supabaseClient.auth.signInWithPassword({ email, password });
+    $('#loginSubmit').disabled = false;
+    if (result.error) showAuthMessage(result.error.message);
+    else showAuthMessage('Вхід виконано.');
+  };
+  const submitRegister = async (event) => {
+    event.preventDefault();
+    if (!supabaseClient) { showAuthMessage('Спочатку заповни supabase-config.js.'); return; }
+    const name = $('#registerName').value.trim(); const email = $('#registerEmail').value.trim(); const password = $('#registerPassword').value;
+    $('#registerSubmit').disabled = true; showAuthMessage('Зачекай…');
+    const result = await supabaseClient.auth.signUp({ email, password, options: { data: { full_name: name } } });
+    $('#registerSubmit').disabled = false;
     if (result.error) {
       showAuthMessage(result.error.message);
-    } else if (authMode === 'register') {
-      $('#authForm').reset();
+    } else {
+      $('#registerForm').reset();
       authMode = 'login';
       renderAuth();
       showAuthMessage('Акаунт зареєстровано. Перевір email, якщо потрібно, а потім увійди через форму авторизації.');
-    } else {
-      showAuthMessage('Вхід виконано.');
     }
-  });
+  };
+  $('#loginForm').addEventListener('submit', submitLogin);
+  $('#registerForm').addEventListener('submit', submitRegister);
   $('#removeDemoBtn').addEventListener('click', () => { if (!authUser) return; write(storage.hidden, true); render(); showToast('Демо-приклади прибрано'); });
   $('#prevMonth').addEventListener('click', () => { selectedMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth()-1, 1); render(); });
   $('#nextMonth').addEventListener('click', () => { selectedMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth()+1, 1); render(); });

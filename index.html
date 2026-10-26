@@ -38,11 +38,16 @@
           <div class="section-kicker">ОБЛІКОВИЙ ЗАПИС</div>
           <h2 id="authTitle">Увійти до обліку</h2>
           <p class="auth-copy" id="authHint">Введи email і пароль, щоб відкрити свої записи та аналітику.</p>
-          <form id="authForm">
-            <label class="auth-label" id="authNameField" hidden>Ім’я<input id="authName" type="text" autocomplete="name" placeholder="Як до тебе звертатися?" /></label>
-            <label class="auth-label">Email<input id="authEmail" type="email" autocomplete="email" required placeholder="you@example.com" /></label>
-            <label class="auth-label">Пароль<input id="authPassword" type="password" autocomplete="current-password" required minlength="6" placeholder="мінімум 6 символів" /></label>
-            <button class="primary-button auth-submit" type="submit" id="authSubmit">Увійти</button>
+          <form id="loginForm">
+            <label class="auth-label">Email<input id="loginEmail" type="email" autocomplete="email" required placeholder="you@example.com" /></label>
+            <label class="auth-label">Пароль<input id="loginPassword" type="password" autocomplete="current-password" required minlength="6" placeholder="мінімум 6 символів" /></label>
+            <button class="primary-button auth-submit" type="submit" id="loginSubmit">Увійти</button>
+          </form>
+          <form id="registerForm" hidden>
+            <label class="auth-label">Ім’я<input id="registerName" type="text" autocomplete="name" required placeholder="Як до тебе звертатися?" /></label>
+            <label class="auth-label">Email<input id="registerEmail" type="email" autocomplete="email" required placeholder="you@example.com" /></label>
+            <label class="auth-label">Пароль<input id="registerPassword" type="password" autocomplete="new-password" required minlength="6" placeholder="мінімум 6 символів" /></label>
+            <button class="primary-button auth-submit" type="submit" id="registerSubmit">Зареєструватися</button>
           </form>
           <button class="google-button" id="googleAuth" type="button"><span class="google-mark">G</span> Увійти через Google</button>
           <button class="auth-switch" id="authModeToggle" type="button">Ще немає акаунта? Створити його</button>
