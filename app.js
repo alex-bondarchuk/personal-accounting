@@ -253,8 +253,6 @@ function renderAuth() {
       : 'Введи email і пароль, щоб відкрити свої записи та аналітику.';
   $('#authForm').hidden = !configured;
   $('#googleAuth').hidden = !configured;
-  $('#authNameField').hidden = !isRegister || !configured;
-  $('#authName').required = isRegister && configured;
   $('#authModeToggle').hidden = Boolean(authUser) || !configured;
   if (!configured) $('#authMessage').textContent = 'Авторизація ще не налаштована.';
   $('#authSubmit').textContent = isRegister ? 'Зареєструватися' : 'Увійти';
@@ -310,9 +308,9 @@ function setup() {
   $('#authForm').addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!supabaseClient) { showAuthMessage('Спочатку заповни supabase-config.js.'); return; }
-    const email = $('#authEmail').value.trim(); const password = $('#authPassword').value; const name = $('#authName').value.trim();
+    const email = $('#authEmail').value.trim(); const password = $('#authPassword').value;
     $('#authSubmit').disabled = true; showAuthMessage('Зачекай…');
-    const result = authMode === 'login' ? await supabaseClient.auth.signInWithPassword({ email, password }) : await supabaseClient.auth.signUp({ email, password, options: { data: { full_name: name } } });
+    const result = authMode === 'login' ? await supabaseClient.auth.signInWithPassword({ email, password }) : await supabaseClient.auth.signUp({ email, password });
     $('#authSubmit').disabled = false;
     if (result.error) {
       showAuthMessage(result.error.message);
