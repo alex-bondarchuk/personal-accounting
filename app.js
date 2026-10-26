@@ -17,6 +17,7 @@ let cumulative = true;
 let supabaseClient = null;
 let authUser = null;
 let authMode = 'login';
+let authOpen = false;
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -93,14 +94,15 @@ function demoEntries() {
 }
 
 function allEntries() {
+  if (authUser) return getUserEntries();
   const overrides = read(storage.demoOverrides, {});
   const deleted = read(storage.deletedDemo, {});
   const demo = read(storage.hidden, false) ? [] : demoEntries().filter((entry) => !deleted[entry.id]).map((entry) => ({ ...entry, category: overrides[entry.id] ?? entry.category }));
-  return [...demo, ...getUserEntries()];
+  return demo;
 }
 function entriesForMonth(month = selectedMonth) { const key = monthKey(month); return allEntries().filter((entry) => entry.date.startsWith(key)); }
 function defaultBudgets() { return { 'Дім і комуналка': 16000, 'Продукти': 9000, 'Транспорт': 3500, 'Кафе й ресторани': 3500, 'Покупки': 4500, 'Дозвілля й підписки': 1800, "Здоров'я й догляд": 2500, 'Інше': 2500 }; }
-function budgets() { return read(settingsStorageKey(), defaultBudgets()); }
+function budgets() { return authUser ? read(settingsStorageKey(), defaultBudgets()) : defaultBudgets(); }
 function showToast(message) { const toast = $('#toast'); toast.textContent = message; toast.classList.add('show'); clearTimeout(showToast.timer); showToast.timer = setTimeout(() => toast.classList.remove('show'), 2400); }
 function total(entries) { return entries.reduce((sum, entry) => sum + entry.amount, 0); }
 
@@ -181,12 +183,13 @@ function renderSixMonths() {
 }
 
 function renderBudgets(entries, activeDay, monthDays) {
-  const current = budgets(); const sums = categorySums(entries); $('#budgetGrid').innerHTML = categories.map((category) => { const limit = Number(current[category.name] || 0); const used = sums[category.name] || 0; const percent = limit ? used/limit*100 : 0; const expected = limit * activeDay/monthDays; const over = used > limit; return `<article class="budget-card"><div class="budget-top"><div class="budget-name"><i class="color-dot" style="background:${category.color}"></i>${category.name}</div><label><span class="sr-only">Ліміт ${category.name}</span><input class="budget-input" type="number" min="0" step="100" value="${limit}" data-budget="${category.name}" aria-label="Ліміт ${category.name}" /> ₴</label></div><div class="budget-used"><span>${money(used)} ₴ витрачено</span><span>${Math.round(percent)}%</span></div><div class="progress"><i class="${over ? 'over' : ''}" style="width:${Math.min(100, percent)}%"></i></div><div class="budget-note ${over ? 'over' : ''}">${over ? `Перевищено на ${money(used-limit)} ₴` : `Сьогодні мав би бути ${money(expected)} ₴`}</div></article>`; }).join(''); $$('.budget-input').forEach((input) => input.addEventListener('change', async () => { const next = budgets(); next[input.dataset.budget] = Math.max(0, Number(input.value) || 0); write(settingsStorageKey(), next); await cloudSettingsUpsert(next); render(); showToast('Бюджет оновлено'); }));
+  const current = budgets(); const sums = categorySums(entries); $('#budgetGrid').innerHTML = categories.map((category) => { const limit = Number(current[category.name] || 0); const used = sums[category.name] || 0; const percent = limit ? used/limit*100 : 0; const expected = limit * activeDay/monthDays; const over = used > limit; const control = authUser ? `<label><span class="sr-only">Ліміт ${category.name}</span><input class="budget-input" type="number" min="0" step="100" value="${limit}" data-budget="${category.name}" aria-label="Ліміт ${category.name}" /> ₴</label>` : `<span class="budget-limit-readonly">${money(limit)} ₴</span>`; return `<article class="budget-card"><div class="budget-top"><div class="budget-name"><i class="color-dot" style="background:${category.color}"></i>${category.name}</div>${control}</div><div class="budget-used"><span>${money(used)} ₴ витрачено</span><span>${Math.round(percent)}%</span></div><div class="progress"><i class="${over ? 'over' : ''}" style="width:${Math.min(100, percent)}%"></i></div><div class="budget-note ${over ? 'over' : ''}">${over ? `Перевищено на ${money(used-limit)} ₴` : `Сьогодні мав би бути ${money(expected)} ₴`}</div></article>`; }).join(''); $$('.budget-input').forEach((input) => input.addEventListener('change', async () => { if (!authUser) return; const next = budgets(); next[input.dataset.budget] = Math.max(0, Number(input.value) || 0); write(settingsStorageKey(), next); await cloudSettingsUpsert(next); render(); showToast('Бюджет оновлено'); }));
 }
 
 function renderJournal(entries) {
   const query = normalize($('#searchInput')?.value || ''); const filter = $('#categoryFilter')?.value || 'all'; const filtered = entries.filter((entry) => (!query || normalize(entry.name).includes(query)) && (filter === 'all' || entry.category === Number(filter))).sort((a,b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
-  $('#journalCount').textContent = `${filtered.length} ${filtered.length === 1 ? 'операція' : 'операцій'}`; $('#journalList').innerHTML = filtered.length ? filtered.map((entry) => `<div class="journal-row"><span class="journal-date">${formatDate(entry.date)}</span><span class="journal-desc">${escapeHtml(entry.name)}</span><button class="category-chip" data-cycle="${entry.id}" title="Змінити категорію">${categories[entry.category].name}</button><span class="journal-amount">${money(entry.amount)} ₴</span><button class="delete-button" data-delete="${entry.id}" aria-label="Видалити ${escapeHtml(entry.name)}">×</button></div>`).join('') : '<div class="empty-state">У цьому місяці ще немає записів.</div>';
+  const canEdit = Boolean(authUser); const categoryControl = (entry) => canEdit ? `<button class="category-chip" data-cycle="${entry.id}" title="Змінити категорію">${categories[entry.category].name}</button>` : `<span class="category-chip readonly">${categories[entry.category].name}</span>`; const deleteControl = canEdit ? `<button class="delete-button" data-delete="${entry.id}" aria-label="Видалити ${escapeHtml(entry.name)}">×</button>` : '';
+  $('#journalCount').textContent = `${filtered.length} ${filtered.length === 1 ? 'операція' : 'операцій'}`; $('#journalList').innerHTML = filtered.length ? filtered.map((entry) => `<div class="journal-row"><span class="journal-date">${formatDate(entry.date)}</span><span class="journal-desc">${escapeHtml(entry.name)}</span>${categoryControl(entry)}<span class="journal-amount">${money(entry.amount)} ₴</span>${deleteControl}</div>`).join('') : '<div class="empty-state">У цьому місяці ще немає записів.</div>';
   $$('[data-cycle]').forEach((button) => button.addEventListener('click', async () => {
     const target = allEntries().find((entry) => entry.id === button.dataset.cycle);
     if (!target) return;
@@ -234,9 +237,12 @@ function renderAuth() {
   const configured = Boolean(supabaseClient);
   const isRegister = authMode === 'register';
   document.body.classList.toggle('authenticated', Boolean(authUser));
-  $('#authGate').hidden = Boolean(authUser);
+  document.body.classList.toggle('auth-open', Boolean(authOpen && !authUser));
+  $('#authGate').classList.toggle('register-mode', isRegister);
+  $('#authGate').hidden = Boolean(authUser) || !authOpen;
+  $('#loginToggle').hidden = Boolean(authUser);
+  $('#registerToggle').hidden = Boolean(authUser);
   $('#authToggle').hidden = !authUser;
-  $('#syncStatus').innerHTML = `<span></span> ${authUser ? 'синхронізовано' : 'локально'}`;
   $('#authToggle').textContent = 'Мій акаунт';
   $('#authTitle').textContent = authUser ? (authUser.email || 'Мій акаунт') : (isRegister ? 'Створити акаунт' : 'Увійти до обліку');
   $('#accountEmail').textContent = authUser?.email || 'Мій акаунт';
@@ -247,6 +253,8 @@ function renderAuth() {
       : 'Введи email і пароль, щоб відкрити свої записи та аналітику.';
   $('#authForm').hidden = !configured;
   $('#googleAuth').hidden = !configured;
+  $('#authNameField').hidden = !isRegister || !configured;
+  $('#authName').required = isRegister && configured;
   $('#authModeToggle').hidden = Boolean(authUser) || !configured;
   if (!configured) $('#authMessage').textContent = 'Авторизація ще не налаштована.';
   $('#authSubmit').textContent = isRegister ? 'Зареєструватися' : 'Увійти';
@@ -267,14 +275,7 @@ async function syncFromCloud() {
 async function handleAuthState(user) {
   authUser = user;
   if (authUser) {
-    const guestEntries = read(storage.user, []);
-    const accountEntries = getUserEntries();
-    if (guestEntries.length) {
-      const merged = [...accountEntries, ...guestEntries.filter((guest) => !accountEntries.some((entry) => entry.id === guest.id))];
-      setUserEntries(merged); write(storage.user, []);
-    }
-    const guestBudgets = read(storage.settings, null);
-    if (guestBudgets && !read(settingsStorageKey(), null)) { write(settingsStorageKey(), guestBudgets); write(storage.settings, null); }
+    authOpen = false;
     await syncFromCloud();
   }
   renderAuth(); render();
@@ -291,6 +292,9 @@ async function initSupabase() {
 function setup() {
   const savedTheme = localStorage.getItem(storage.theme); if (savedTheme === 'dark') document.body.classList.add('dark');
   $('#themeToggle').addEventListener('click', () => { document.body.classList.toggle('dark'); localStorage.setItem(storage.theme, document.body.classList.contains('dark') ? 'dark' : 'light'); });
+  const openAuth = (mode) => { authMode = mode; authOpen = true; $('#authPanel').hidden = true; window.scrollTo({ top: 0, behavior: 'smooth' }); renderAuth(); };
+  $('#loginToggle').addEventListener('click', () => openAuth('login'));
+  $('#registerToggle').addEventListener('click', () => openAuth('register'));
   $('#authToggle').addEventListener('click', () => { $('#authPanel').hidden = !$('#authPanel').hidden; renderAuth(); });
   $('#authModeToggle').addEventListener('click', () => { authMode = authMode === 'login' ? 'register' : 'login'; renderAuth(); });
   $('#authLogout').addEventListener('click', async () => { if (supabaseClient) await supabaseClient.auth.signOut(); $('#authPanel').hidden = true; });
@@ -306,9 +310,9 @@ function setup() {
   $('#authForm').addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!supabaseClient) { showAuthMessage('Спочатку заповни supabase-config.js.'); return; }
-    const email = $('#authEmail').value.trim(); const password = $('#authPassword').value;
+    const email = $('#authEmail').value.trim(); const password = $('#authPassword').value; const name = $('#authName').value.trim();
     $('#authSubmit').disabled = true; showAuthMessage('Зачекай…');
-    const result = authMode === 'login' ? await supabaseClient.auth.signInWithPassword({ email, password }) : await supabaseClient.auth.signUp({ email, password });
+    const result = authMode === 'login' ? await supabaseClient.auth.signInWithPassword({ email, password }) : await supabaseClient.auth.signUp({ email, password, options: { data: { full_name: name } } });
     $('#authSubmit').disabled = false;
     if (result.error) {
       showAuthMessage(result.error.message);
@@ -321,16 +325,16 @@ function setup() {
       showAuthMessage('Вхід виконано.');
     }
   });
-  $('#removeDemoBtn').addEventListener('click', () => { write(storage.hidden, true); render(); showToast('Демо-приклади прибрано'); });
+  $('#removeDemoBtn').addEventListener('click', () => { if (!authUser) return; write(storage.hidden, true); render(); showToast('Демо-приклади прибрано'); });
   $('#prevMonth').addEventListener('click', () => { selectedMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth()-1, 1); render(); });
   $('#nextMonth').addEventListener('click', () => { selectedMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth()+1, 1); render(); });
   $('#cumulativeToggle').addEventListener('click', () => { cumulative = !cumulative; $('#cumulativeToggle').classList.toggle('active', cumulative); renderDaily(entriesForMonth(), currentDayFor(selectedMonth)); });
   $$('.example-btn').forEach((button) => button.addEventListener('click', () => { $('#expenseInput').value = button.dataset.example; updateParsePreview(); $('#expenseInput').focus(); }));
   $('#expenseInput').addEventListener('input', updateParsePreview);
-  $('#addExpenseBtn').addEventListener('click', async () => { const parsed = parseEntries($('#expenseInput').value); if (!parsed.length) { showToast('Не знайшов суму — спробуй «кава 85»'); return; } setUserEntries([...getUserEntries(), ...parsed]); for (const entry of parsed) await cloudUpsert(entry); $('#expenseInput').value = ''; updateParsePreview(); const latest = fromKey(parsed[0].date); selectedMonth = new Date(latest.getFullYear(), latest.getMonth(), 1); render(); showToast(`Додано: ${parsed.length} ${parsed.length === 1 ? 'запис' : 'записи'}`); });
+  $('#addExpenseBtn').addEventListener('click', async () => { if (!authUser) return; const parsed = parseEntries($('#expenseInput').value); if (!parsed.length) { showToast('Не знайшов суму — спробуй «кава 85»'); return; } setUserEntries([...getUserEntries(), ...parsed]); for (const entry of parsed) await cloudUpsert(entry); $('#expenseInput').value = ''; updateParsePreview(); const latest = fromKey(parsed[0].date); selectedMonth = new Date(latest.getFullYear(), latest.getMonth(), 1); render(); showToast(`Додано: ${parsed.length} ${parsed.length === 1 ? 'запис' : 'записи'}`); });
   $('#searchInput').addEventListener('input', () => renderJournal(entriesForMonth())); $('#categoryFilter').addEventListener('change', () => renderJournal(entriesForMonth()));
   $('#categoryFilter').insertAdjacentHTML('beforeend', categories.map((category, i) => `<option value="${i}">${category.name}</option>`).join(''));
-  renderAuth(); initSupabase();
+  render(); renderAuth(); initSupabase();
 }
 
 function updateParsePreview() { const preview = $('#parsePreview'); const parsed = parseEntries($('#expenseInput').value); preview.hidden = !parsed.length; preview.innerHTML = parsed.map((entry) => `<span class="parse-chip">${escapeHtml(entry.name)} · ${money(entry.amount)} ₴ · ${formatDate(entry.date)}</span>`).join(''); }

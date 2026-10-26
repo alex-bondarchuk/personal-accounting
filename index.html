@@ -15,7 +15,8 @@
       <header class="topbar">
         <a class="brand" href="#top" aria-label="облік, на початок">облік<span class="brand-dot">.</span></a>
         <div class="top-actions">
-          <span class="status-dot" id="syncStatus"><span></span> локально</span>
+          <button class="top-auth-link" id="loginToggle" type="button">Увійти</button>
+          <button class="top-auth-link" id="registerToggle" type="button">Зареєструватися</button>
           <button class="auth-button" id="authToggle" hidden>Мій акаунт</button>
           <button class="icon-button" id="themeToggle" aria-label="Перемкнути тему" title="Перемкнути тему">☼</button>
         </div>
@@ -27,7 +28,7 @@
         </div>
       </header>
 
-      <section class="auth-gate" id="authGate">
+      <section class="auth-gate" id="authGate" hidden>
         <div class="auth-gate-copy">
           <div class="eyebrow">ОСОБИСТИЙ ФІНАНСОВИЙ БЛОКНОТ</div>
           <h1>Гроші,<br /><span>без шуму.</span></h1>
@@ -38,6 +39,7 @@
           <h2 id="authTitle">Увійти до обліку</h2>
           <p class="auth-copy" id="authHint">Введи email і пароль, щоб відкрити свої записи та аналітику.</p>
           <form id="authForm">
+            <label class="auth-label" id="authNameField" hidden>Ім’я<input id="authName" type="text" autocomplete="name" placeholder="Як до тебе звертатися?" /></label>
             <label class="auth-label">Email<input id="authEmail" type="email" autocomplete="email" required placeholder="you@example.com" /></label>
             <label class="auth-label">Пароль<input id="authPassword" type="password" autocomplete="current-password" required minlength="6" placeholder="мінімум 6 символів" /></label>
             <button class="primary-button auth-submit" type="submit" id="authSubmit">Увійти</button>
@@ -57,18 +59,21 @@
           </div>
           <div class="capture-card paper-card">
             <div class="capture-label"><span class="capture-icon">↳</span> швидкий запис</div>
-            <label class="sr-only" for="expenseInput">Запиши витрати одним рядком</label>
-            <textarea id="expenseInput" rows="2" placeholder="Кава 85, таксі додому 240, Сільпо 1 340 вчора"></textarea>
-            <div class="example-row" id="exampleRow">
-              <button class="example-btn" data-example="Кава 85, таксі додому 240">Кава 85, таксі 240</button>
-              <button class="example-btn" data-example="вчора: кава 85, аптека 420">вчора: кава 85, аптека 420</button>
-              <button class="example-btn" data-example="Сільпо 1 340 позавчора">Сільпо 1 340 позавчора</button>
+            <div class="private-entry-form" id="privateEntryForm">
+              <label class="sr-only" for="expenseInput">Запиши витрати одним рядком</label>
+              <textarea id="expenseInput" rows="2" placeholder="Кава 85, таксі додому 240, Сільпо 1 340 вчора"></textarea>
+              <div class="example-row" id="exampleRow">
+                <button class="example-btn" data-example="Кава 85, таксі додому 240">Кава 85, таксі 240</button>
+                <button class="example-btn" data-example="вчора: кава 85, аптека 420">вчора: кава 85, аптека 420</button>
+                <button class="example-btn" data-example="Сільпо 1 340 позавчора">Сільпо 1 340 позавчора</button>
+              </div>
+              <div class="parse-preview" id="parsePreview" hidden></div>
+              <div class="capture-footer">
+                <span>Підтримує дати, гривні та українські й російські назви</span>
+                <button class="primary-button" id="addExpenseBtn">Додати <span>↗</span></button>
+              </div>
             </div>
-            <div class="parse-preview" id="parsePreview" hidden></div>
-            <div class="capture-footer">
-              <span>Підтримує дати, гривні та українські й російські назви</span>
-              <button class="primary-button" id="addExpenseBtn">Додати <span>↗</span></button>
-            </div>
+            <div class="demo-locked" id="demoLocked"><span class="lock-mark">✦</span><strong>Це демо-перегляд</strong><span>Увійди або зареєструйся, щоб додавати власні витрати.</span></div>
           </div>
         </section>
 
