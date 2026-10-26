@@ -94,11 +94,11 @@ function demoEntries() {
 }
 
 function allEntries() {
-  if (authUser) return getUserEntries();
+  if (!authUser) return [];
   const overrides = read(storage.demoOverrides, {});
   const deleted = read(storage.deletedDemo, {});
   const demo = read(storage.hidden, false) ? [] : demoEntries().filter((entry) => !deleted[entry.id]).map((entry) => ({ ...entry, category: overrides[entry.id] ?? entry.category }));
-  return demo;
+  return [...demo, ...getUserEntries()];
 }
 function entriesForMonth(month = selectedMonth) { const key = monthKey(month); return allEntries().filter((entry) => entry.date.startsWith(key)); }
 function defaultBudgets() { return { 'Дім і комуналка': 16000, 'Продукти': 9000, 'Транспорт': 3500, 'Кафе й ресторани': 3500, 'Покупки': 4500, 'Дозвілля й підписки': 1800, "Здоров'я й догляд": 2500, 'Інше': 2500 }; }
@@ -120,7 +120,7 @@ function render() {
   renderSixMonths();
   renderBudgets(entries, activeDay, monthDays);
   renderJournal(entries);
-  const demoVisible = !read(storage.hidden, false);
+  const demoVisible = Boolean(authUser) && !read(storage.hidden, false);
   $('#demoBadge').style.display = demoVisible ? 'inline-block' : 'none';
   $('#removeDemoBtn').style.display = demoVisible ? 'inline-block' : 'none';
 }
